@@ -22,10 +22,20 @@ def yes_or_no_regresar(question):
 def getTopTenExportImport(direction):
     #lectura y guardado de informacion de archivo en memoria
     data = pd.read_csv(archivo_csv)
+    print("------TOTAL DE REGISTROS------")
+    grouped1 = data[data['direction'] == direction].groupby(['origin', 'destination']).size().reset_index().rename(columns={0:'Cantidad'}).sort_values(by=['Cantidad'], ascending=False).reset_index() 
+    #imprecion en consola de informacion
+    print(grouped1[['origin','destination','Cantidad']])
+    total_value = grouped1['Cantidad'].sum()
+    print("Total de Cantidades por listado: ",total_value)
+    print("------TOP 10 REGISTROS------")
     #filtro y query de informacion 
-    grouped = data[data['direction'] == direction].groupby(['origin', 'destination']).size().reset_index().rename(columns={0:'Cantidad'}).sort_values(by=['Cantidad'], ascending=False).head(10).reset_index()
+    #IMPORTANTE al cambiar el numero en Head se muestran el numero de registro deseados, al quitarla se optiene todos los registros
+    grouped = data[data['direction'] == direction].groupby(['origin', 'destination']).size().reset_index().rename(columns={0:'Cantidad'}).sort_values(by=['Cantidad'], ascending=False).reset_index().head(10) 
     #imprecion en consola de informacion
     print(grouped[['origin','destination','Cantidad']])
+    total_value = grouped['Cantidad'].sum()
+    print("Total de Cantidades por listado: ",total_value)
     #generacion de archivo excel
     prueba = pd.DataFrame(grouped[['origin','destination','Cantidad']])
     prueba.to_excel('1resumen'+direction+'.xlsx', sheet_name='top10'+direction, index=False)
@@ -48,6 +58,7 @@ def getTotalImportacionesExportacionesPais(direction):
     suma_total_values_temp = 0
     suma_total_values = 0
     select_value_final = 0
+    count_registros = 0
     #lectura y guardado de informacion de archivo en memoria
     data = pd.read_csv(archivo_csv)
     #filtrado y query de informacion
@@ -56,6 +67,7 @@ def getTotalImportacionesExportacionesPais(direction):
     suma_total_values_temp = grouped['total_value'].sum() * .8
     #comparacion para saber en que registro de total de obtiene el 80% de las ventas
     for valueTotal in grouped['total_value']:
+        count_registros += 1
         if(suma_total_values <= suma_total_values_temp):
             suma_total_values += valueTotal
             select_value_final = valueTotal
@@ -64,6 +76,7 @@ def getTotalImportacionesExportacionesPais(direction):
     data_final = grouped[['origin','destination','total_value']]
     #imprime en consola con validacion del total value mayor o igual al obtenido del 80%
     print(data_final[data_final['total_value'] >= select_value_final])
+    print("Total de registros de archivo",count_registros)
     #grabado de archivo excel
     prueba = pd.DataFrame(data_final[data_final['total_value'] >= select_value_final])
     prueba.to_excel('3resumen'+direction+'.xlsx', sheet_name='total_value'+direction, index=False )
